@@ -163,23 +163,20 @@ public:
     void update_Node(int id_, Node node_){
         write_Node(id_, node_);
     }
-
     void update_Node_and_Values(int id_, Node node_, Node_Value val_){
         write_Node(id_, node_);
         write_Node_Value(id_, val_);
     }
 
     std::pair<std::vector<int>, Node> find_Node(long long index_hash, T value_){
-        //return false when the key&values is same
-        //be called in insert only
-        std::vector<int> trace = {}, empty_trace = {};
-
+        //vector end with -1 when the key&values is same
+        std::vector<int> trace = {};
+        int same_flag = 0;
         Node cur_node = read_Node(basic_info.root_node_id);
         trace.push_back(cur_node.id);
 
         while (!cur_node.is_leaf){
             int pos = cur_node.size;
-
             Node_Value node_values;
             int values_flag = 1;
 
@@ -193,10 +190,6 @@ public:
                         node_values = read_Node_Value(cur_node.id);
                         values_flag = 0;
                     }
-                    if (node_values.values[i] == value_){
-                        return std::make_pair(empty_trace, cur_node);
-                        //same
-                    }
                     if (value_ < node_values.values[i]){
                         pos = i;
                         break;
@@ -209,18 +202,18 @@ public:
         //then cur_node is a leaf_node
         Node_Value values = read_Node_Value(cur_node.id);
         for (int i = 0; i < cur_node.size; i++){
-            if (index_hash == cur_node.index[i] && value_ == values.values[i]) return std::make_pair(empty_trace, cur_node);
+            if (index_hash == cur_node.index[i] && value_ == values.values[i]) {
+                same_flag = 1;
+                break;
+            }
         }
-        //a tiny optimize here
+        if (same_flag) trace.push_back(-1);
         return std::make_pair(trace, cur_node);
     }
 
     void insert_node(Node cur_node, long long index_, T val_, int ptr_){
         //insert index_ and val_ inside cur_node
         Node_Value cur_values = read_Node_Value(cur_node.id);
-//        std::cout<<cur_node.id<<','<<basic_info.root_node_id<<';'<<cur_node.index[0]<<','<<index_<<std::endl;
-//        std::cout<<(cur_node.index[0] <= index_ || cur_node.id == basic_info.root_node_id)<<std::endl;
-//        assert(cur_node.index[0] <= index_ || cur_node.id == basic_info.root_node_id);
         int pos = cur_node.size;
         for (int i = 0; i < cur_node.size; i++)
             if (cur_node.index[i] > index_ || cur_node.index[i] == index_ && cur_values.values[i] >val_){
@@ -261,7 +254,7 @@ public:
             update_Node_and_Values(new_node.id, new_node, new_node_value);
         } else {
             std::pair<std::vector<int>, Node> ret_ = find_Node(index_hash, value_);
-            if (ret_.first.empty()) return 0;
+            if (ret_.first.back() == -1) return 0;
             Node cur_node = ret_.second;
             std::vector<int> trace = ret_.first;
             int trace_cnt = int(trace.size()) - 1;
@@ -342,7 +335,6 @@ public:
                         inserted_index = cur_node.index[M / 2];
                         inserted_value = cur_values.values[M / 2];
                         inserted_ptr = new_node.id;
-                        std::cout<<"Insert::"<<inserted_index<<','<<inserted_value<<','<<inserted_ptr<<std::endl;
                     }
 
                     if (cur_node.id == basic_info.root_node_id){
@@ -377,6 +369,46 @@ public:
         return 1;
     }
 
+    void search_values(const string& str_index){
+        long long index_hash = get_Hash(str_index);
+        int same_flag = 0;
+        Node cur_node = read_Node(basic_info.root_node_id);
+
+        while (!cur_node.is_leaf){
+            int pos = cur_node.size;
+            Node_Value node_values;
+            int values_flag = 1;
+
+            for (int i = 0; i < cur_node.size; i++)
+                if (index_hash <= cur_node.index[i]){
+                    pos = i;
+                    break;
+                }
+            cur_node = read_Node(cur_node.sons[pos]);
+        }
+        //then cur_node is a leaf_node
+        while (cur_node.index[cur_node.size - 1] < index_hash && cur_node.nxt_node > 0) cur_node = read_Node(cur_node.nxt_node);
+
+        Node_Value values = read_Node_Value(cur_node.id);
+        int flag = 1;
+        std::vector<T> val = {};
+        while (flag){
+            for (int i = 0; i < cur_node.size; i++)
+                if (cur_node.index[i] == index_hash){
+                    val.push_back(values.values[i]);
+                } else if (cur_node.index[i] > index_hash) {flag = 0; break;}
+            if (cur_node.nxt_node > 0) {
+                cur_node = read_Node(cur_node.nxt_node);
+                values = read_Node_Value(cur_node.id);
+            }
+            else break;
+        }
+        if (val.empty()) std::cout<<"null"<<std::endl;
+        else {
+            for (int i = 0; i < val.size() - 1; i++) std::cout<<val[i]<<' ';
+            std::cout<<val[val.size() - 1]<<std::endl;
+        }
+    }
 
     void output_dfs(int id, int space){
         Node n = read_Node(id);
