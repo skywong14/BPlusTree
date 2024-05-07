@@ -22,9 +22,15 @@ int main() {
         }else
         if (s=="find"){
             cin>>ss;
-            tr.search_values(ss);
+            auto val = tr.search_values(ss);
+            if (val.empty()) std::cout<<"null"<<std::endl;
+            else {
+                for (int i = 0; i < val.size() - 1; i++) std::cout<<val[i]<<' ';
+                std::cout<<val[val.size() - 1]<<std::endl;
+            }
         }else {
-            throw std::runtime_error("ooops");
+            cin>>ss>>v;
+            tr.erase(ss,v);
         }
     }
     return 0;

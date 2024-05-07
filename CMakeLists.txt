@@ -5,6 +5,6 @@ set(CMAKE_CXX_STANDARD 14)
 
 include_directories(.)
 
-add_executable(BPlusTree
+add_executable(code
         BPTree.hpp
         test.cpp)
