@@ -370,14 +370,12 @@ public:
 
     sjtu::vector<T> search_values(const string& str_index){
         long long index_hash = get_Hash(str_index);
-        int same_flag = 0;
         basic_info = read_Basic_Information();
         Node cur_node = read_Node(basic_info.root_node_id);
 
         while (!cur_node.is_leaf){
             int pos = cur_node.size;
             Node_Value node_values;
-            int values_flag = 1;
 
             for (int i = 0; i < cur_node.size; i++)
                 if (index_hash <= cur_node.index[i]){
