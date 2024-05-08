@@ -95,14 +95,17 @@ private:
 
     //--------Buffer Pool-------
     struct Buffer_Pool{
-//        Basic_Information basic_info;
-        int node_size = 0, value_size = 0;
+        Basic_Information basic_info;
+        int node_size = 0, value_size = 0, info_flag = 0;
         int node_id[Buffer_Size]{}, value_id[Buffer_Size]{};
         int node_time[Buffer_Size]{}, value_time[Buffer_Size]{};
         int time_tag = 0;
         Node nodes[Buffer_Size];
         Node_Value values[Buffer_Size];
     }buffer;
+    void refresh_basic_info(){
+        write_Basic_Information_disk(buffer.basic_info);
+    }
     void pop_node(int pos_){
         write_Node_disk(buffer.node_id[pos_], buffer.nodes[pos_]);
         buffer.node_size--;
@@ -211,10 +214,14 @@ private:
     //-----------------------------
 
     Basic_Information read_Basic_Information(){
-        return read_Basic_Information_disk();
+        if (!buffer.info_flag){
+            buffer.info_flag = 1;
+            buffer.basic_info = read_Basic_Information_disk();
+        }
+        return buffer.basic_info;
     }
     void write_Basic_Information(Basic_Information info_){
-        write_Basic_Information_disk(info_);
+        buffer.basic_info = info_;
     }
     Node read_Node(int pos_){
         if (Node_in_buffer(pos_)) return get_Node(pos_);
@@ -262,6 +269,7 @@ public:
 
     //buffer:
     void pop_all_buffer(){
+        refresh_basic_info();
         while (buffer.node_size > 0)
             pop_node(0);
         while (buffer.value_size > 0)
