@@ -61,6 +61,7 @@ private:
         file.close();
     }
     Node read_Node(int pos_){
+        if (pos_ <= 0 || pos_ > Max_Nodes) throw std::runtime_error("out of range");
         file.open(index_filename, std::ios::in | std::ios::out | std::ios::binary);
         file.seekg(sizeofBasicInformation + (pos_ - 1) * sizeofNode, std::ios::beg);
         Node node_;
@@ -669,8 +670,6 @@ public:
         if (cur_node.size < internal_limit){
             //an internal node
             //unbalance (at least size >= internal_limit)
-
-            //-
             parent_node = read_Node(path[path_cnt - 1]);
 
             std::pair<int, int> siblings = get_siblings(cur_node.id, parent_node); //pre and nxt
@@ -752,7 +751,6 @@ public:
             Node tmp_node; Node_Value tmp_value;
             int sub_flag = 0;
             for (int i = int(path.size()) - 2; i >= 0; i--){
-                //-
                 tmp_node = read_Node(path[i]);
                 tmp_value = read_Node_Value(path[i]);
                 for (int j = 0; j < tmp_node.size; j++)
