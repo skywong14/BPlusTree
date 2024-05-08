@@ -804,6 +804,7 @@ public:
                     internal_pos = coalesce_pre_leaf(sib_node, cur_node, parent_node);
                 } else {
                     // Coalesce Right
+
                     if (siblings.second <= 0 || siblings.second >= Max_Nodes) throw std::runtime_error("out of range"); //for debug
                     sib_node = read_Node(siblings.second);
                     internal_pos = coalesce_pre_leaf(cur_node, sib_node, parent_node);
