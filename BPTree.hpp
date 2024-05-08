@@ -778,7 +778,7 @@ public:
             //a leaf node
             //unbalance (at least size >= M / 2)
             assert(path[path.size() - 2] > 0); //for debug only
-            if (path[path.size() - 2] <= 0 || path[path.size() - 2] >= Max_Nodes) throw std::runtime_error("out of range"); //for debug
+            if (path[path.size() - 2] <= 0 || path[path.size() - 2] >= Max_Nodes) throw std::runtime_error("out of range"); //for  debug
             parent_node = read_Node(path[path.size() - 2]);
 
             std::pair<int, int> siblings = get_siblings(cur_node.id, parent_node); //pre and nxt
