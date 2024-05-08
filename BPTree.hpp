@@ -194,6 +194,7 @@ public:
                     }
                 }
             }
+            if (cur_node.sons[pos] <= 0 || cur_node.sons[pos] >= Max_Nodes) throw std::runtime_error("out of range"); //for debug
             cur_node = read_Node(cur_node.sons[pos]);
             trace.push_back(cur_node.id);
         }
@@ -302,6 +303,7 @@ public:
                             new_values.values[i] = cur_values.values[i + (M + 1) / 2];
                         }
                         if (exist_nxt_node){
+                            if (cur_node.nxt_node <= 0 || cur_node.nxt_node>=Max_Nodes) throw std::runtime_error("out of range"); //for debug
                             nxt_node = read_Node(cur_node.nxt_node);
                             nxt_node.pre_node = new_node.id;
                         }
@@ -323,6 +325,7 @@ public:
                         cur_node.size = M / 2;
 
                         if (exist_nxt_node){
+                            if (cur_node.nxt_node <= 0 || cur_node.nxt_node>=Max_Nodes) throw std::runtime_error("out of range"); //for debug
                             nxt_node = read_Node(cur_node.nxt_node);
                             nxt_node.pre_node = new_node.id;
                         }
@@ -357,6 +360,7 @@ public:
                     update_Node_and_Values(new_node.id, new_node, new_values);
 
                     trace_cnt--;
+                    if (trace[trace_cnt] <= 0 || trace[trace_cnt]>=Max_Nodes) throw std::runtime_error("out of range"); //for debug
                     cur_node = read_Node(trace[trace_cnt]);
                 }
             }
