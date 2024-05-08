@@ -5,6 +5,7 @@
 #include <cstdio>
 #include <cstring>
 #include "vector.hpp"
+#include <vector>  //use only for debug
 #include <iostream>
 #include <fstream>
 #include <cassert>
@@ -12,10 +13,10 @@ using std::string;
 using std::fstream;
 using std::ifstream;
 using std::ofstream;
-using sjtu::vector; //use only for debug
+using std::vector;
 
 //each internal node with M keys and M+1 sons
-template<class T, int Max_Nodes = 3000, int M = 300>
+template<class T, int Max_Nodes = 3000, int M = 300, int Buffer_Size = 2>
 class BPTree{
 private:
     fstream file, file_value;
@@ -46,7 +47,8 @@ private:
     Node root;
     Basic_Information basic_info;
 
-    Basic_Information read_Basic_Information(){
+    //-------directly on disk-------
+    Basic_Information read_Basic_Information_disk(){
         file.open(index_filename, std::ios::in | std::ios::out | std::ios::binary);
         file.seekg(std::ios::beg);
         Basic_Information info;
@@ -54,13 +56,13 @@ private:
         file.close();
         return info;
     }
-    void write_Basic_Information(Basic_Information info_){
+    void write_Basic_Information_disk(Basic_Information info_){
         file.open(index_filename, std::ios::in | std::ios::out | std::ios::binary);
         file.seekp(std::ios::beg);
         file.write(reinterpret_cast<char*>(&info_), sizeofBasicInformation);
         file.close();
     }
-    Node read_Node(int pos_){
+    Node read_Node_disk(int pos_){
         file.open(index_filename, std::ios::in | std::ios::out | std::ios::binary);
         file.seekg(sizeofBasicInformation + (pos_ - 1) * sizeofNode, std::ios::beg);
         Node node_;
@@ -69,14 +71,14 @@ private:
         return node_;
     }
 
-    void write_Node(int pos_, Node node_){
+    void write_Node_disk(int pos_, Node node_){
         file.open(index_filename, std::ios::in | std::ios::out | std::ios::binary);
         file.seekp(sizeofBasicInformation + (pos_ - 1) * sizeofNode, std::ios::beg);
         file.write(reinterpret_cast<char*>(&node_), sizeofNode);
         file.close();
     }
 
-    Node_Value read_Node_Value(int pos_){
+    Node_Value read_Node_Value_disk(int pos_){
         file_value.open(value_filename, std::ios::in | std::ios::out | std::ios::binary);
         file_value.seekg((pos_ - 1) * sizeofNodeValue, std::ios::beg);
         Node_Value node_;
@@ -84,11 +86,165 @@ private:
         file_value.close();
         return std::move(node_);
     }
-    void write_Node_Value(int pos_, Node_Value node_){
+    void write_Node_Value_disk(int pos_, Node_Value node_){
         file_value.open(value_filename, std::ios::in | std::ios::out | std::ios::binary);
         file_value.seekp((pos_ - 1) * sizeofNodeValue, std::ios::beg);
         file_value.write(reinterpret_cast<char*>(&node_), sizeofNodeValue);
         file_value.close();
+    }
+    //-----------------------
+
+    //--------Buffer Pool-------
+    struct Buffer_Pool{
+//        Basic_Information basic_info;
+        int node_size = 0, value_size = 0;
+        int node_id[Buffer_Size]{}, value_id[Buffer_Size]{};
+        int node_time[Buffer_Size]{}, value_time[Buffer_Size]{};
+        int time_tag = 0;
+        Node nodes[Buffer_Size];
+        Node_Value values[Buffer_Size];
+    }buffer;
+    void pop_node(int pos_){
+        write_Node_disk(buffer.node_id[pos_], buffer.nodes[pos_]);
+        buffer.node_size--;
+        if (buffer.node_size > 0 && pos_ != buffer.node_size){
+            buffer.node_id[pos_] = buffer.node_id[buffer.node_size];
+            buffer.node_time[pos_] = buffer.node_time[buffer.node_size];
+        }
+    }
+    void pop_node_value(int pos_){
+        write_Node_Value_disk(buffer.value_id[pos_], buffer.values[pos_]);
+        buffer.value_size--;
+        if (buffer.value_size > 0 && pos_ != buffer.value_size){
+            buffer.value_id[pos_] = buffer.value_id[buffer.value_size];
+            buffer.value_time[pos_] = buffer.value_time[buffer.value_size];
+        }
+    }
+    void add_node(int pos_, int id_, Node node_){
+        buffer.node_id[pos_] = id_;
+        buffer.node_time[pos_] = buffer.time_tag;
+        buffer.nodes[pos_] = node_;
+    }
+    void add_node_value(int pos_, int id_, Node_Value val_){
+        buffer.value_id[pos_] = id_;
+        buffer.value_time[pos_] = buffer.time_tag;
+        buffer.values[pos_] = val_;
+    }
+    bool Node_in_buffer(int id_){
+        for (int i = 0; i < buffer.node_size; i++)
+            if (buffer.node_id[i] == id_) return true;
+        return false;
+    }
+    bool Node_Value_in_buffer(int id_){
+        for (int i = 0; i < buffer.value_size; i++)
+            if (buffer.value_id[i] == id_) return true;
+        return false;
+    }
+    void push_node(int id_, Node node_){
+        buffer.time_tag++;
+        if (buffer.node_size < Buffer_Size){
+            add_node(buffer.node_size, id_, node_);
+            buffer.node_size++;
+        }  else {
+            int lst_time = buffer.time_tag, lst_id = -1;
+            for (int i = 0; i < buffer.node_size; i++)
+                if (buffer.node_time[i] < lst_time){
+                    lst_time = buffer.node_time[i]; lst_id = i;
+                }
+            pop_node(lst_id);
+            add_node(lst_id, id_, node_);
+        }
+    }
+    void push_node_value(int id_, Node_Value val_){
+        buffer.time_tag++;
+        if (buffer.value_size < Buffer_Size){
+            add_node_value(buffer.value_size, id_, val_);
+            buffer.value_size++;
+        }  else {
+            int lst_time = buffer.time_tag, lst_id = -1;
+            for (int i = 0; i < buffer.value_size; i++)
+                if (buffer.value_time[i] < lst_time){
+                    lst_time = buffer.value_time[i]; lst_id = i;
+                }
+            pop_node_value(lst_id);
+            add_node_value(lst_id, id_, val_);
+        }
+    }
+    void update_Node_in_buffer(int id_, Node node_){
+        buffer.time_tag++;
+        for (int i = 0; i < buffer.node_size; i++)
+            if (buffer.node_id[i] == id_){
+                buffer.node_time[i] = buffer.time_tag;
+                buffer.nodes[i] = node_;
+                return;
+            }
+    }
+    void update_Node_Value_in_buffer(int id_, Node_Value val_){
+        buffer.time_tag++;
+        for (int i = 0; i < buffer.value_size; i++)
+            if (buffer.value_id[i] == id_){
+                buffer.value_time[i] = buffer.time_tag;
+                buffer.values[i] = val_;
+                return;
+            }
+    }
+    Node get_Node(int id_){
+        buffer.time_tag++;
+        for (int i = 0; i < buffer.node_size; i++)
+        if (buffer.node_id[i] == id_){
+            buffer.node_time[i] = buffer.time_tag;
+            return buffer.nodes[i];
+        }
+    }
+    Node_Value get_Node_Value(int id_){
+        buffer.time_tag++;
+        for (int i = 0; i < buffer.value_size; i++)
+            if (buffer.value_id[i] == id_){
+                buffer.value_time[i] = buffer.time_tag;
+                return buffer.values[i];
+            }
+    }
+    //-----------------------------
+
+    Basic_Information read_Basic_Information(){
+        return read_Basic_Information_disk();
+    }
+    void write_Basic_Information(Basic_Information info_){
+        write_Basic_Information_disk(info_);
+    }
+    Node read_Node(int pos_){
+        if (Node_in_buffer(pos_)) return get_Node(pos_);
+        else {
+            Node node_ = read_Node_disk(pos_);
+            push_node(pos_, node_);
+            return node_;
+        }
+    }
+
+    void write_Node(int pos_, Node node_){
+        if (Node_in_buffer(pos_)){
+            update_Node_in_buffer(pos_, node_);
+        } else {
+            write_Node_disk(pos_, node_);
+            push_node(pos_, node_);
+        }
+    }
+
+    Node_Value read_Node_Value(int pos_){
+        if (Node_Value_in_buffer(pos_)) return get_Node_Value(pos_);
+        else {
+            Node_Value val_ = read_Node_Value_disk(pos_);
+            push_node_value(pos_, val_);
+            return val_;
+        }
+    }
+    void write_Node_Value(int pos_, Node_Value val_){
+        if (Node_Value_in_buffer(pos_)){
+            update_Node_Value_in_buffer(pos_, val_);
+        } else {
+            write_Node_Value_disk(pos_, val_);
+            push_node_value(pos_, val_);
+        }
     }
 
     int check_file_exists(const string& FN){
@@ -101,6 +257,17 @@ private:
     }
 
 public:
+
+    //buffer:
+    void pop_all_buffer(){
+        for (int i = 0; i < buffer.node_size; i++)
+            pop_node(i);
+        for (int i = 0; i < buffer.value_size; i++)
+            pop_node_value(i);
+        buffer.time_tag = 1;
+        buffer.node_size = buffer.value_size = 0;
+    }
+
     long long get_Hash(const string& str1){
         long long ha = 0;
         for (int i = 0; i < str1.length(); i++)
@@ -811,8 +978,8 @@ public:
     }
 
     void output_dfs(int id, int space){
-        Node n = read_Node(id);
-        Node_Value v = read_Node_Value(id);
+        Node n = read_Node_disk(id);
+        Node_Value v = read_Node_Value_disk(id);
         for (int ii= 0; ii < space; ii++) std::cout<<' ';
         std::cout<<"Node_"<<id<<':'<<" size="<<n.size<<','<<','<<" is_leaf="<<n.is_leaf<<std::endl;
         if (n.is_leaf){
@@ -833,7 +1000,7 @@ public:
     }
     void output(){
         std::cout<<">>>>>>>>>>>>>>>"<<std::endl;
-        Basic_Information info_ = read_Basic_Information();
+        Basic_Information info_ = read_Basic_Information_disk();
         if (info_.root_node_id == 0) {
             std::cout<<"Empty!!!"<<std::endl;
         }else
@@ -844,7 +1011,9 @@ public:
     BPTree() = default;
     explicit BPTree(const string& FN) : filename(FN) {}
 
-    ~BPTree() = default;
+    ~BPTree() {
+        pop_all_buffer();
+    }
 
 };
 #endif //BPLUSTREE_BPTREE_HPP
