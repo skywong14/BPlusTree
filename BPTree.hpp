@@ -275,7 +275,7 @@ public:
         while (buffer.value_size > 0)
             pop_node_value(0);
         buffer.time_tag = 1;
-        buffer.node_size = buffer.value_size = 0;
+        buffer.node_size = buffer.value_size = buffer.info_flag = 0;
     }
 
     long long get_Hash(const string& str1){
@@ -310,7 +310,7 @@ public:
         info1.root_node_id = 0; //0 means nullptr
         for (int i = 1; i <= Max_Nodes; i++)
             info1.empty_node_id[i-1] = i;
-        write_Basic_Information(info1);
+        write_Basic_Information_disk(info1);
 
         file_value.open(value_filename, std::ios::in | std::ios::out | std::ios::binary);
         assert(file_value.is_open());
