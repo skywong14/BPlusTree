@@ -274,7 +274,7 @@ public:
             write_Node_disk(buffer.node_id[i], buffer.nodes[i]);
         }
         for (int i = 0; i < buffer.value_size; i++){
-            write_Node_disk(buffer.value_id[i], buffer.values[i]);
+            write_Node_Value_disk(buffer.value_id[i], buffer.values[i]);
         }
         buffer.time_tag = 1;
         buffer.node_size = buffer.value_size = buffer.info_flag = 0;
@@ -809,10 +809,8 @@ public:
         //delete the index&val at pos in cur_node(must be an internal node)
         //also delete the pos_ptr at pos+1
         //path[path_cnt] == cur_node.id
-        assert(path[path_cnt] == cur_node.id);
 
         Node_Value cur_value = read_Node_Value(cur_node.id);
-        long long deleted_index = cur_node.index[pos];
         T deleted_val = cur_value.values[pos];
 
 
@@ -827,7 +825,6 @@ public:
             //this leaf node is root
             if (cur_node.size == 0){
                 //move root
-                assert(cur_node.sons[0] > 0); //for debug only
                 basic_info.root_node_id = cur_node.sons[0];
                 deallocate_node(cur_node.id);
                 write_Basic_Information(basic_info);
@@ -855,13 +852,11 @@ public:
             int borrow_flag = 0;
             //1.1 try to borrow from pre_node
             if (siblings.first > 0){
-                assert(cur_node.pre_node == siblings.first);
                 sib_node = read_Node(siblings.first);
                 borrow_flag = borrow_from_pre_internal(sib_node, cur_node, parent_node);
             }
             //1.2 if 1.1 fails, borrow from nxt_node
             if (!borrow_flag && siblings.second > 0){
-                assert(cur_node.nxt_node == siblings.second);
                 sib_node = read_Node(siblings.second);
                 borrow_flag = borrow_from_nxt_internal(cur_node, sib_node, parent_node);
             }
