@@ -14,13 +14,14 @@ using std::ifstream;
 using std::ofstream;
 
 //each internal node with M keys and M+1 sons
-template<class T, int Max_Nodes = 300, int M = 4>
+template<class T, int Max_Nodes = 900, int M = 3>
 class BPTree{
 private:
     fstream file, file_value;
     string index_filename, value_filename, filename;
     const int sizeofint = sizeof(int);
     const long long BASE = 197, MOD = 1e9+7;
+    const int leaf_limit = (M + 1) / 2, internal_limit = M / 2;
     int sizeofBasicInformation = sizeof(Basic_Information);
     int sizeofNode = sizeof(Node);
     int sizeofNodeValue = sizeof(Node_Value);
@@ -78,7 +79,6 @@ private:
         file.close();
     }
 
-    //todo
     Node_Value read_Node_Value(int pos_){
         file_value.open(value_filename, std::ios::in | std::ios::out | std::ios::binary);
         file_value.seekg((pos_ - 1) * sizeofNodeValue, std::ios::beg);
@@ -157,7 +157,7 @@ public:
         assert(flag != 0); //for debug only
         return flag;
     }
-    int deallocate_node(int id_){
+    void deallocate_node(int id_){
         basic_info.empty_node_id[id_ - 1] = id_;
     }
     void update_Node(int id_, Node node_){
@@ -418,8 +418,8 @@ public:
     }
 
     int borrow_from_pre_leaf(Node pre_node, Node cur_node, Node parent_node){
-        if (pre_node.size <= M / 2) return 0;
-        assert(cur_node.size == M / 2 - 1); //for debug only
+        if (pre_node.size <= leaf_limit) return 0;
+        assert(cur_node.size == leaf_limit - 1); //for debug only
         //return 1 if borrow successfully
         Node_Value parent_value = read_Node_Value(parent_node.id);
         Node_Value cur_value = read_Node_Value(cur_node.id), pre_value = read_Node_Value(pre_node.id);
@@ -453,14 +453,15 @@ public:
         return 1;
     }
     int borrow_from_nxt_leaf(Node cur_node, Node nxt_node, Node parent_node){
-        if (nxt_node.size <= M / 2) return 0;
-        assert(cur_node.size == M / 2 - 1); //for debug only
+        if (nxt_node.size <= leaf_limit) return 0;
+        assert(cur_node.size == leaf_limit - 1); //for debug only
         //return 1 if borrow successfully
         Node_Value parent_value = read_Node_Value(parent_node.id);
         Node_Value cur_value = read_Node_Value(cur_node.id), nxt_value = read_Node_Value(nxt_node.id);
         cur_node.index[cur_node.size] = nxt_node.index[0];
         cur_node.sons[cur_node.size] = nxt_node.sons[0];
         cur_value.values[cur_node.size] = nxt_value.values[0];
+        cur_node.size++;
         nxt_node.size--;
         long long ind_ = nxt_node.index[0]; T val_ = nxt_value.values[0];
         for (int i = 0; i < nxt_node.size; i++){
@@ -485,6 +486,7 @@ public:
     }
 
     int coalesce_pre_leaf(Node pre_node, Node cur_node, Node parent_node){
+//        std::cout<<"coalesce_pre_leaf..."<<std::endl;
         Node_Value parent_value = read_Node_Value(parent_node.id);
         Node_Value cur_value = read_Node_Value(cur_node.id), pre_value = read_Node_Value(pre_node.id);
         //merge
@@ -497,11 +499,11 @@ public:
 
         int pos = -1;
         for (int i = 0; i < parent_node.size; i++)
-            if (cur_node.index[0] == parent_node.index[i] && cur_value.values[0] == parent_value.values[0]){
+            if (cur_node.index[0] == parent_node.index[i] && cur_value.values[0] == parent_value.values[i]){ //todo 替换成 parent_node.sons[i+1] = cur_node.id
                 pos = i;
                 break;
             }
-        assert(pos != -1);
+        assert(pos >= 0);
 
         pre_node.nxt_node = cur_node.nxt_node;
         for (int i = 0; i < cur_node.size; i++){
@@ -511,14 +513,15 @@ public:
         }
         pre_node.size += cur_node.size;
         deallocate_node(cur_node.id);
+        update_Node_and_Values(pre_node.id, pre_node, pre_value);
 
         return pos;
     }
 
     int borrow_from_pre_internal(Node pre_node, Node cur_node, Node parent_node){
         //todo:搞清楚节点临界大小
-        if (pre_node.size <= M / 2) return 0;
-        assert(cur_node.size == M / 2 - 1); //for debug only
+        if (pre_node.size <= internal_limit) return 0;
+        assert(cur_node.size == internal_limit - 1); //for debug only
         Node_Value parent_value = read_Node_Value(parent_node.id);
         Node_Value cur_value = read_Node_Value(cur_node.id), pre_value = read_Node_Value(pre_node.id);
 
@@ -552,8 +555,8 @@ public:
     }
     int borrow_from_nxt_internal(Node cur_node, Node nxt_node, Node parent_node){
         //todo:搞清楚节点临界大小
-        if (nxt_node.size <= M / 2) return 0;
-        assert(cur_node.size == M / 2 - 1); //for debug only
+        if (nxt_node.size <= internal_limit) return 0;
+        assert(cur_node.size == internal_limit - 1); //for debug only
         Node_Value parent_value = read_Node_Value(parent_node.id);
         Node_Value cur_value = read_Node_Value(cur_node.id), nxt_value = read_Node_Value(nxt_node.id);
 
@@ -570,6 +573,9 @@ public:
         cur_value.values[cur_node.size] = parent_value.values[nxt_in_parent];
         cur_node.sons[cur_node.size + 1] = nxt_node.sons[0];
         cur_node.size++;
+
+        parent_node.index[nxt_in_parent] = nxt_node.index[0];
+        parent_value.values[nxt_in_parent] = nxt_value.values[0];
 
         nxt_node.sons[0] = nxt_node.sons[1];
         for (int i = 0; i < nxt_node.size - 1; i++){
@@ -616,14 +622,15 @@ public:
             pre_value.values[i + pre_node.size] = cur_value.values[i];
         }
         pre_node.size += cur_node.size;
-
         deallocate_node(cur_node.id);
+        update_Node_and_Values(pre_node.id, pre_node, pre_value);
 
         return cur_in_parent;
     }
 
     //ATTENTION "const std::vector<int>& path"
     void erase_internal(Node cur_node, int pos, const std::vector<int>& path, int path_cnt){
+//        std::cout<<"delete on:"<<cur_node.id<<", pos:"<<pos<<std::endl;
         //delete the index&val at pos in cur_node(must be an internal node)
         //also delete the pos_ptr at pos+1
         //path[path_cnt] == cur_node.id
@@ -655,6 +662,7 @@ public:
             update_Node_and_Values(cur_node.id, cur_node, cur_value);
             return;
         }
+        update_Node_and_Values(cur_node.id, cur_node, cur_value);
 
         assert(path_cnt >= 1); //for debug only
 
@@ -665,9 +673,9 @@ public:
         Node sib_node;
         Node_Value parent_values;
 
-        if (cur_node.size < M / 2){
+        if (cur_node.size < internal_limit){
             //an internal node
-            //unbalance (at least size >= M / 2)
+            //unbalance (at least size >= internal_limit)
             parent_node = read_Node(path[path_cnt - 1]);
 
             std::pair<int, int> siblings = get_siblings(cur_node.id, parent_node); //pre and nxt
@@ -687,6 +695,7 @@ public:
             }
             //2.if fail, merge and delete on the internal nodes
             if (!borrow_flag){
+//                std::cout<<"Merge in internal..."<<std::endl;
                 int internal_pos = -1;
                 if (siblings.first > 0){
                     // Coalesce Left
@@ -737,10 +746,12 @@ public:
             update_Node_and_Values(cur_node.id, cur_node, cur_value);
             return 1;
         }
+        update_Node_and_Values(cur_node.id, cur_node, cur_value);
 
         assert(path.size() >= 2); //for debug only
 
         if (pos == 0 && cur_node.pre_node != 0){
+//            std::cout<<"Delete and ret!!!"<<std::endl;
             //if delete on head, update the key
             long long substitution_index = cur_node.index[0];
             T substitution_val = cur_value.values[0];
@@ -767,14 +778,14 @@ public:
         Node sib_node;
         Node_Value parent_values;
 
-        if (cur_node.size < M / 2){
+        if (cur_node.size < leaf_limit){
+//            std::cout<<"Delete and merge!!!"<<std::endl;
             //a leaf node
             //unbalance (at least size >= M / 2)
             assert(path[path.size() - 2] > 0); //for debug only
             parent_node = read_Node(path[path.size() - 2]);
 
             std::pair<int, int> siblings = get_siblings(cur_node.id, parent_node); //pre and nxt
-
             int borrow_flag = 0;
             //1.1 try to borrow from pre_node
             if (siblings.first > 0){
@@ -812,7 +823,7 @@ public:
         Node n = read_Node(id);
         Node_Value v = read_Node_Value(id);
         for (int ii= 0; ii < space; ii++) std::cout<<' ';
-        std::cout<<"Node_"<<id<<':'<<" size="<<n.size<<','<<" index0="<<n.index[0]<<','<<" is_leaf="<<n.is_leaf<<std::endl;
+        std::cout<<"Node_"<<id<<':'<<" size="<<n.size<<','<<','<<" is_leaf="<<n.is_leaf<<std::endl;
         if (n.is_leaf){
             for (int i = 0; i < n.size; i++){
                 for (int ii= 0; ii < space; ii++) std::cout<<' ';
@@ -832,6 +843,9 @@ public:
     void output(){
         std::cout<<">>>>>>>>>>>>>>>"<<std::endl;
         Basic_Information info_ = read_Basic_Information();
+        if (info_.root_node_id == 0) {
+            std::cout<<"Empty!!!"<<std::endl;
+        }else
         output_dfs(info_.root_node_id,0);
         std::cout<<"<<<<<<<<<<<<"<<std::endl;
     }
