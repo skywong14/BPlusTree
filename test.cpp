@@ -10,7 +10,7 @@ using std::cout;
 using std::endl;
 BPTree<int> tr;
 int main() {
-    freopen("data","r",stdin);
+//    freopen("data","r",stdin);
     tr.initialise("happy");
     int T;
     cin>>T;
