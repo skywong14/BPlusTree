@@ -356,7 +356,6 @@ public:
                     update_Node_and_Values(new_node.id, new_node, new_values);
 
                     trace_cnt--;
-                    if (trace[trace_cnt] <= 0 || trace[trace_cnt] >= Max_Nodes) throw std::runtime_error("out of range"); //for debug
                     cur_node = read_Node(trace[trace_cnt]);
                 }
             }
@@ -368,8 +367,11 @@ public:
 
     vector<T> search_values(const string& str_index){
         long long index_hash = get_Hash(str_index);
+        vector<T> val = {};
         basic_info = read_Basic_Information();
-        //-
+        if (basic_info.root_node_id == 0){
+            return val;
+        }
         Node cur_node = read_Node(basic_info.root_node_id);
 
         while (!cur_node.is_leaf){
@@ -391,7 +393,6 @@ public:
 
         Node_Value values = read_Node_Value(cur_node.id);
         int flag = 1;
-        vector<T> val = {};
         while (flag){
             for (int i = 0; i < cur_node.size; i++)
                 if (cur_node.index[i] == index_hash){
@@ -776,7 +777,6 @@ public:
             //a leaf node
             //unbalance (at least size >= M / 2)
             assert(path[path.size() - 2] > 0); //for debug only
-            if (path[path.size() - 2] <= 0 || path[path.size() - 2] >= Max_Nodes) throw std::runtime_error("out of range"); //for debug
             parent_node = read_Node(path[path.size() - 2]);
 
             std::pair<int, int> siblings = get_siblings(cur_node.id, parent_node); //pre and nxt
