@@ -38,7 +38,6 @@ private:
         long long index[M + 1]{};
         int sons[M + 2]{};
         Node() = default;
-        //if is_leaf == 1: sons point to Value, else point to another node's id
     };
     struct Node_Value{
         T values[M + 2]{};
