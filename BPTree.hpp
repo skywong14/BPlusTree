@@ -150,8 +150,10 @@ private:
                 if (buffer.node_time[i] < lst_time){
                     lst_time = buffer.node_time[i]; lst_id = i;
                 }
+            assert(lst_id >= 0);
             pop_node(lst_id);
             add_node(lst_id, id_, node_);
+            buffer.node_size++;
         }
     }
     void push_node_value(int id_, Node_Value val_){
@@ -167,6 +169,7 @@ private:
                 }
             pop_node_value(lst_id);
             add_node_value(lst_id, id_, val_);
+            buffer.value_size++;
         }
     }
     void update_Node_in_buffer(int id_, Node node_){
@@ -224,7 +227,6 @@ private:
         if (Node_in_buffer(pos_)){
             update_Node_in_buffer(pos_, node_);
         } else {
-            write_Node_disk(pos_, node_);
             push_node(pos_, node_);
         }
     }
@@ -241,7 +243,6 @@ private:
         if (Node_Value_in_buffer(pos_)){
             update_Node_Value_in_buffer(pos_, val_);
         } else {
-            write_Node_Value_disk(pos_, val_);
             push_node_value(pos_, val_);
         }
     }
