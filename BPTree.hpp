@@ -169,7 +169,6 @@ public:
         //vector end with -1 when the key&values is same
         vector<int> trace = {};
         int same_flag = 0;
-        if (basic_info.root_node_id <= 0 || basic_info.root_node_id >= Max_Nodes) throw std::runtime_error("out of range"); //for debug
         Node cur_node = read_Node(basic_info.root_node_id);
         trace.push_back(cur_node.id);
 
@@ -194,7 +193,6 @@ public:
                     }
                 }
             }
-            if (cur_node.sons[pos] <= 0 || cur_node.sons[pos] >= Max_Nodes) throw std::runtime_error("out of range"); //for debug
             cur_node = read_Node(cur_node.sons[pos]);
             trace.push_back(cur_node.id);
         }
@@ -325,7 +323,6 @@ public:
                         cur_node.size = M / 2;
 
                         if (exist_nxt_node){
-                            if (cur_node.nxt_node <= 0 || cur_node.nxt_node>=Max_Nodes) throw std::runtime_error("out of range"); //for debug
                             nxt_node = read_Node(cur_node.nxt_node);
                             nxt_node.pre_node = new_node.id;
                         }
@@ -373,6 +370,7 @@ public:
     vector<T> search_values(const string& str_index){
         long long index_hash = get_Hash(str_index);
         basic_info = read_Basic_Information();
+        if (basic_info.root_node_id <= 0 || basic_info.root_node_id>=Max_Nodes) throw std::runtime_error("out of range"); //for debug
         Node cur_node = read_Node(basic_info.root_node_id);
 
         while (!cur_node.is_leaf){
@@ -384,10 +382,14 @@ public:
                     pos = i;
                     break;
                 }
+            if (cur_node.sons[pos] <= 0 || cur_node.sons[pos] >= Max_Nodes) throw std::runtime_error("out of range"); //for debug
             cur_node = read_Node(cur_node.sons[pos]);
         }
         //then cur_node is a leaf_node
-        while (cur_node.index[cur_node.size - 1] < index_hash && cur_node.nxt_node > 0) cur_node = read_Node(cur_node.nxt_node);
+        while (cur_node.index[cur_node.size - 1] < index_hash && cur_node.nxt_node > 0) {
+            if (cur_node.nxt_node <= 0 || cur_node.nxt_node >= Max_Nodes) throw std::runtime_error("out of range"); //for debug
+            cur_node = read_Node(cur_node.nxt_node);
+        }
 
         Node_Value values = read_Node_Value(cur_node.id);
         int flag = 1;
@@ -668,6 +670,8 @@ public:
         if (cur_node.size < internal_limit){
             //an internal node
             //unbalance (at least size >= internal_limit)
+
+            if (path[path_cnt - 1] <= 0 || path[path_cnt - 1] >= Max_Nodes) throw std::runtime_error("out of range"); //for debug
             parent_node = read_Node(path[path_cnt - 1]);
 
             std::pair<int, int> siblings = get_siblings(cur_node.id, parent_node); //pre and nxt
@@ -694,6 +698,7 @@ public:
                     internal_pos = coalesce_pre_internal(sib_node, cur_node, parent_node);
                 } else {
                     // Coalesce Right
+                    assert(siblings.second > 0);
                     sib_node = read_Node(siblings.second);
                     internal_pos = coalesce_pre_internal(cur_node, sib_node, parent_node);
                 }
