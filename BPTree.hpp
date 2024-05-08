@@ -33,8 +33,6 @@ private:
         int empty_node_id[Max_Nodes]{};
         //if 0 then used
     };
-
-    //Node's id is 1-based
     struct Node{
         int is_leaf = 0, size = 0, id = 0;
         int pre_node = 0, nxt_node = 0;
