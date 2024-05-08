@@ -5,7 +5,6 @@
 #include <cstdio>
 #include <cstring>
 #include "vector.hpp"
-#include <vector>//use only for debug
 #include <iostream>
 #include <fstream>
 #include <cassert>
@@ -13,7 +12,7 @@ using std::string;
 using std::fstream;
 using std::ifstream;
 using std::ofstream;
-using std::vector; //use only for debug
+using sjtu::vector; //use only for debug
 
 //each internal node with M keys and M+1 sons
 template<class T, int Max_Nodes = 3000, int M = 300>
