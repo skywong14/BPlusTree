@@ -61,7 +61,6 @@ private:
         file.close();
     }
     Node read_Node(int pos_){
-        if (pos_ <= 0 || pos_ > Max_Nodes) throw std::runtime_error("out of range");
         file.open(index_filename, std::ios::in | std::ios::out | std::ios::binary);
         file.seekg(sizeofBasicInformation + (pos_ - 1) * sizeofNode, std::ios::beg);
         Node node_;
