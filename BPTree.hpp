@@ -61,7 +61,6 @@ private:
         file.close();
     }
     Node read_Node(int pos_){
-        if (pos_ <= 0 || pos_ >= Max_Nodes) throw std::runtime_error("out of range"); //for debug
         file.open(index_filename, std::ios::in | std::ios::out | std::ios::binary);
         file.seekg(sizeofBasicInformation + (pos_ - 1) * sizeofNode, std::ios::beg);
         Node node_;
@@ -170,6 +169,7 @@ public:
         //vector end with -1 when the key&values is same
         vector<int> trace = {};
         int same_flag = 0;
+        if (basic_info.root_node_id <= 0 || basic_info.root_node_id >= Max_Nodes) throw std::runtime_error("out of range"); //for debug
         Node cur_node = read_Node(basic_info.root_node_id);
         trace.push_back(cur_node.id);
 
