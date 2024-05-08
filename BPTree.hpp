@@ -4,7 +4,7 @@
 #pragma once
 #include <cstdio>
 #include <cstring>
-//#include "vector.hpp" 
+#include "vector.hpp"
 #include <vector>//use only for debug
 #include <iostream>
 #include <fstream>
