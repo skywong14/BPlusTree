@@ -31,7 +31,6 @@ private:
     struct Basic_Information{
         int root_node_id = 0;
         int empty_node_id[Max_Nodes]{};
-        //if 0 then used
     };
     struct Node{
         int is_leaf = 0, size = 0, id = 0;
