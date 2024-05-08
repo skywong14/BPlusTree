@@ -270,10 +270,12 @@ public:
     //buffer:
     void pop_all_buffer(){
         refresh_basic_info();
-        while (buffer.node_size > 0)
-            pop_node(0);
-        while (buffer.value_size > 0)
-            pop_node_value(0);
+        for (int i = 0; i < buffer.node_size; i++){
+            write_Node_disk(buffer.node_id[i], buffer.nodes[i]);
+        }
+        for (int i = 0; i < buffer.value_size; i++){
+            write_Node_disk(buffer.value_id[i], buffer.values[i]);
+        }
         buffer.time_tag = 1;
         buffer.node_size = buffer.value_size = buffer.info_flag = 0;
     }
