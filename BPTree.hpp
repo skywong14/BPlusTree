@@ -16,7 +16,7 @@ using std::ofstream;
 using std::vector;
 
 //each internal node with M keys and M+1 sons
-template<class T, int Max_Nodes = 3000, int M = 300, int Buffer_Size = 150>
+template<class T, int Max_Nodes = 3000, int M = 3, int Buffer_Size = 2>
 class BPTree{
 private:
     fstream file, file_value;
@@ -261,9 +261,9 @@ public:
     //buffer:
     void pop_all_buffer(){
         for (int i = 0; i < buffer.node_size; i++)
-            pop_node(i);
+            pop_node(0);
         for (int i = 0; i < buffer.value_size; i++)
-            pop_node_value(i);
+            pop_node_value(0);
         buffer.time_tag = 1;
         buffer.node_size = buffer.value_size = 0;
     }
