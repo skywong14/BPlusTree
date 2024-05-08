@@ -753,6 +753,7 @@ public:
             Node tmp_node; Node_Value tmp_value;
             int sub_flag = 0;
             for (int i = int(path.size()) - 2; i >= 0; i--){
+                if (path[i] <= 0 || path[i] >= Max_Nodes) throw std::runtime_error("out of range"); //for debug
                 tmp_node = read_Node(path[i]);
                 tmp_value = read_Node_Value(path[i]);
                 for (int j = 0; j < tmp_node.size; j++)
@@ -777,6 +778,7 @@ public:
             //a leaf node
             //unbalance (at least size >= M / 2)
             assert(path[path.size() - 2] > 0); //for debug only
+            if (path[path.size() - 2] <= 0 || path[path.size() - 2] >= Max_Nodes) throw std::runtime_error("out of range"); //for debug
             parent_node = read_Node(path[path.size() - 2]);
 
             std::pair<int, int> siblings = get_siblings(cur_node.id, parent_node); //pre and nxt
@@ -802,6 +804,7 @@ public:
                     internal_pos = coalesce_pre_leaf(sib_node, cur_node, parent_node);
                 } else {
                     // Coalesce Right
+                    if (siblings.second <= 0 || siblings.second >= Max_Nodes) throw std::runtime_error("out of range"); //for debug
                     sib_node = read_Node(siblings.second);
                     internal_pos = coalesce_pre_leaf(cur_node, sib_node, parent_node);
                 }
