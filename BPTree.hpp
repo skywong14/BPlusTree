@@ -356,7 +356,7 @@ public:
                     update_Node_and_Values(new_node.id, new_node, new_values);
 
                     trace_cnt--;
-                    //-
+                    if (trace[trace_cnt] <= 0 || trace[trace_cnt] >= Max_Nodes) throw std::runtime_error("out of range"); //for debug
                     cur_node = read_Node(trace[trace_cnt]);
                 }
             }
@@ -368,7 +368,8 @@ public:
 
     vector<T> search_values(const string& str_index){
         long long index_hash = get_Hash(str_index);
-        basic_info = read_Basic_Information();//-
+        basic_info = read_Basic_Information();
+        //-
         Node cur_node = read_Node(basic_info.root_node_id);
 
         while (!cur_node.is_leaf){
@@ -380,7 +381,7 @@ public:
                     pos = i;
                     break;
                 }
-            //-
+            if (cur_node.sons[pos] <= 0 || cur_node.sons[pos] >= Max_Nodes) throw std::runtime_error("out of range"); //for debug
             cur_node = read_Node(cur_node.sons[pos]);
         }
         //then cur_node is a leaf_node
@@ -801,7 +802,6 @@ public:
                     internal_pos = coalesce_pre_leaf(sib_node, cur_node, parent_node);
                 } else {
                     // Coalesce Right
-                    if (siblings.second <= 0 || siblings.second >= Max_Nodes) throw std::runtime_error("out of range"); //for debug
                     sib_node = read_Node(siblings.second);
                     internal_pos = coalesce_pre_leaf(cur_node, sib_node, parent_node);
                 }
