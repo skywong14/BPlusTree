@@ -13,7 +13,7 @@ using std::string;
 using std::fstream;
 using std::ifstream;
 using std::ofstream;
-using std::vector;
+using sjtu::vector;
 
 //each internal node with M keys and M+1 sons
 template<class T, int Max_Nodes = 4000, int M = 310, int Buffer_Size = 350>
