@@ -35,7 +35,7 @@ int main() {
             tr.erase(ss,v);
         }
     }
-//    tr.pop_all_buffer();
+    tr.pop_all_buffer();
 //    tr.output();
     return 0;
 }

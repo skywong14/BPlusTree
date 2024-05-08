@@ -109,6 +109,7 @@ private:
         if (buffer.node_size > 0 && pos_ != buffer.node_size){
             buffer.node_id[pos_] = buffer.node_id[buffer.node_size];
             buffer.node_time[pos_] = buffer.node_time[buffer.node_size];
+            buffer.nodes[pos_] = buffer.nodes[buffer.node_size];
         }
     }
     void pop_node_value(int pos_){
@@ -117,6 +118,7 @@ private:
         if (buffer.value_size > 0 && pos_ != buffer.value_size){
             buffer.value_id[pos_] = buffer.value_id[buffer.value_size];
             buffer.value_time[pos_] = buffer.value_time[buffer.value_size];
+            buffer.values[pos_] = buffer.values[buffer.value_size];
         }
     }
     void add_node(int pos_, int id_, Node node_){
