@@ -4,7 +4,7 @@
 #pragma once
 #include <cstdio>
 #include <cstring>
-#include <vector> //use only for debug
+#include "vector.hpp" //use only for debug
 #include <iostream>
 #include <fstream>
 #include <cassert>
@@ -168,9 +168,9 @@ public:
         write_Node_Value(id_, val_);
     }
 
-    std::pair<std::vector<int>, Node> find_Node(long long index_hash, T value_){
+    std::pair<sjtu::vector<int>, Node> find_Node(long long index_hash, T value_){
         //vector end with -1 when the key&values is same
-        std::vector<int> trace = {};
+        sjtu::vector<int> trace = {};
         int same_flag = 0;
         Node cur_node = read_Node(basic_info.root_node_id);
         trace.push_back(cur_node.id);
@@ -253,10 +253,10 @@ public:
             new_node_value.values[0] = value_;
             update_Node_and_Values(new_node.id, new_node, new_node_value);
         } else {
-            std::pair<std::vector<int>, Node> ret_ = find_Node(index_hash, value_);
+            std::pair<sjtu::vector<int>, Node> ret_ = find_Node(index_hash, value_);
             if (ret_.first.back() == -1) return 0;
             Node cur_node = ret_.second;
-            std::vector<int> trace = ret_.first;
+            sjtu::vector<int> trace = ret_.first;
             int trace_cnt = int(trace.size()) - 1;
             //then insert in cur_node and not the head of cur_node is guaranteed
             //we need to insert index_hash&inserted_value to cur_node
@@ -364,14 +364,14 @@ public:
             }
 
         }
-
         write_Basic_Information(basic_info);
         return 1;
     }
 
-    std::vector<T> search_values(const string& str_index){
+    sjtu::vector<T> search_values(const string& str_index){
         long long index_hash = get_Hash(str_index);
         int same_flag = 0;
+        basic_info = read_Basic_Information();
         Node cur_node = read_Node(basic_info.root_node_id);
 
         while (!cur_node.is_leaf){
@@ -391,7 +391,7 @@ public:
 
         Node_Value values = read_Node_Value(cur_node.id);
         int flag = 1;
-        std::vector<T> val = {};
+        sjtu::vector<T> val = {};
         while (flag){
             for (int i = 0; i < cur_node.size; i++)
                 if (cur_node.index[i] == index_hash){
@@ -628,8 +628,8 @@ public:
         return cur_in_parent;
     }
 
-    //ATTENTION "const std::vector<int>& path"
-    void erase_internal(Node cur_node, int pos, const std::vector<int>& path, int path_cnt){
+    //ATTENTION "const sjtu::vector<int>& path"
+    void erase_internal(Node cur_node, int pos, const sjtu::vector<int>& path, int path_cnt){
 //        std::cout<<"delete on:"<<cur_node.id<<", pos:"<<pos<<std::endl;
         //delete the index&val at pos in cur_node(must be an internal node)
         //also delete the pos_ptr at pos+1
@@ -715,8 +715,8 @@ public:
     int erase(const string& str1, T value_){
         basic_info = read_Basic_Information();
         long long index_hash = get_Hash(str1);
-        std::pair<std::vector<int>, Node> ret = find_Node(index_hash, value_);
-        std::vector<int> path = ret.first;
+        std::pair<sjtu::vector<int>, Node> ret = find_Node(index_hash, value_);
+        sjtu::vector<int> path = ret.first;
         Node cur_node = ret.second;
         Node_Value cur_value = read_Node_Value(cur_node.id);
         if (path.back() != -1) return 0; //cannot find index&val in the BPTree

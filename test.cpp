@@ -23,6 +23,7 @@ int main() {
         }else
         if (s=="find"){
             cin>>ss;
+
             auto val = tr.search_values(ss);
             if (val.empty()) std::cout<<"null"<<std::endl;
             else {
