@@ -482,7 +482,6 @@ public:
     }
 
     int coalesce_pre_leaf(Node pre_node, Node cur_node, Node parent_node){
-//        std::cout<<"coalesce_pre_leaf..."<<std::endl;
         Node_Value parent_value = read_Node_Value(parent_node.id);
         Node_Value cur_value = read_Node_Value(cur_node.id), pre_value = read_Node_Value(pre_node.id);
         //merge
@@ -495,7 +494,7 @@ public:
 
         int pos = -1;
         for (int i = 0; i < parent_node.size; i++)
-            if (cur_node.index[0] == parent_node.index[i] && cur_value.values[0] == parent_value.values[i]){ //todo 替换成 parent_node.sons[i+1] = cur_node.id
+            if (parent_node.sons[i+1] == cur_node.id){
                 pos = i;
                 break;
             }
@@ -515,7 +514,6 @@ public:
     }
 
     int borrow_from_pre_internal(Node pre_node, Node cur_node, Node parent_node){
-        //todo:搞清楚节点临界大小
         if (pre_node.size <= internal_limit) return 0;
         assert(cur_node.size == internal_limit - 1); //for debug only
         Node_Value parent_value = read_Node_Value(parent_node.id);
@@ -550,7 +548,6 @@ public:
         return 1;
     }
     int borrow_from_nxt_internal(Node cur_node, Node nxt_node, Node parent_node){
-        //todo:搞清楚节点临界大小
         if (nxt_node.size <= internal_limit) return 0;
         assert(cur_node.size == internal_limit - 1); //for debug only
         Node_Value parent_value = read_Node_Value(parent_node.id);
@@ -626,7 +623,6 @@ public:
 
     //ATTENTION "const vector<int>& path"
     void erase_internal(Node cur_node, int pos, const vector<int>& path, int path_cnt){
-//        std::cout<<"delete on:"<<cur_node.id<<", pos:"<<pos<<std::endl;
         //delete the index&val at pos in cur_node(must be an internal node)
         //also delete the pos_ptr at pos+1
         //path[path_cnt] == cur_node.id
@@ -662,9 +658,6 @@ public:
 
         assert(path_cnt >= 1); //for debug only
 
-        if (pos == 0 && cur_node.pre_node != 0){
-            //todo? or maybe no need
-        }
         Node parent_node;
         Node sib_node;
         Node_Value parent_values;
@@ -691,7 +684,6 @@ public:
             }
             //2.if fail, merge and delete on the internal nodes
             if (!borrow_flag){
-//                std::cout<<"Merge in internal..."<<std::endl;
                 int internal_pos = -1;
                 if (siblings.first > 0){
                     // Coalesce Left
@@ -747,7 +739,6 @@ public:
         assert(path.size() >= 2); //for debug only
 
         if (pos == 0 && cur_node.pre_node != 0){
-//            std::cout<<"Delete and ret!!!"<<std::endl;
             //if delete on head, update the key
             long long substitution_index = cur_node.index[0];
             T substitution_val = cur_value.values[0];
@@ -775,7 +766,6 @@ public:
         Node_Value parent_values;
 
         if (cur_node.size < leaf_limit){
-//            std::cout<<"Delete and merge!!!"<<std::endl;
             //a leaf node
             //unbalance (at least size >= M / 2)
             assert(path[path.size() - 2] > 0); //for debug only

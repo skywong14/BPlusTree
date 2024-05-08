@@ -4,6 +4,8 @@
 #include <cstdio>
 #include <iostream>
 #include <cstring>
+#include <vector>
+#include "vector.hpp"
 #include "BPTree.hpp"
 using std::cin;
 using std::cout;
@@ -12,8 +14,9 @@ BPTree<int> tr;
 int main() {
 //    freopen("data","r",stdin);
     tr.initialise("happy");
-    int T;cin>>T;
-    string s,ss,sss;
+    int T;
+    cin>>T;
+    string s,ss;
     int v;
     while (T--){
         cin>>s;
@@ -23,7 +26,6 @@ int main() {
         }else
         if (s=="find"){
             cin>>ss;
-
             auto val = tr.search_values(ss);
             if (val.empty()) std::cout<<"null"<<std::endl;
             else {
@@ -32,10 +34,8 @@ int main() {
             }
         }else if (s == "delete") {
             cin>>ss>>v;
-//            std::cout<<"Deleting..."<<ss<<','<<v<<std::endl;
             tr.erase(ss,v);
         }
-//        tr.output();
     }
     return 0;
 }
