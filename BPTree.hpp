@@ -417,7 +417,6 @@ public:
 
     int borrow_from_pre_leaf(Node pre_node, Node cur_node, Node parent_node){
         if (pre_node.size <= leaf_limit) return 0;
-        assert(cur_node.size == leaf_limit - 1); //for debug only
         //return 1 if borrow successfully
         Node_Value parent_value = read_Node_Value(parent_node.id);
         Node_Value cur_value = read_Node_Value(cur_node.id), pre_value = read_Node_Value(pre_node.id);
