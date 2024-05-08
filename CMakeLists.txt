@@ -7,4 +7,6 @@ include_directories(.)
 
 add_executable(code
         BPTree.hpp
-        test.cpp)
+        test.cpp
+        vector.hpp
+        exceptions.hpp)
