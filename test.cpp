@@ -1,10 +1,7 @@
-//
 // Created by skywa on 2024/4/29.
-//
 #include <cstdio>
 #include <iostream>
 #include <cstring>
-#include <vector>
 #include "vector.hpp"
 #include "BPTree.hpp"
 using std::string;
